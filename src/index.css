@@ -1,0 +1,102 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Wellbeing App Colors: Warm off-white paper background, Deep moss green primary, Soft clay accent */
+    --background: 40 33% 98%; /* Warm off-white #fcfbfa */
+    --foreground: 120 10% 15%; /* Dark for text */
+
+    --primary: 130 30% 35%; /* Deep moss green #3e7446 */
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 130 15% 85%; /* Light muted green */
+    --secondary-foreground: 130 30% 25%;
+    
+    --accent: 20 40% 65%; /* Soft clay #cd957a */
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --muted: 40 20% 90%;
+    --muted-foreground: 120 5% 45%;
+
+    --card: 40 33% 98%;
+    --card-foreground: 120 10% 15%;
+
+    --popover: 40 33% 98%;
+    --popover-foreground: 120 10% 15%;
+
+    --border: 40 15% 85%;
+    --input: 40 15% 85%;
+    --ring: 130 30% 35%;
+    --radius: 0.75rem;
+  }
+ 
+  .dark {
+    --background: 120 15% 10%; /* Very dark green/black */
+    --foreground: 40 33% 98%;
+
+    --primary: 130 25% 45%; /* Lighter moss green for dark mode */
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 120 15% 20%;
+    --secondary-foreground: 40 33% 98%;
+    
+    --accent: 20 40% 55%; /* Richer clay for dark mode */
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+
+    --muted: 120 15% 15%;
+    --muted-foreground: 120 5% 65%;
+
+    --card: 120 15% 10%;
+    --card-foreground: 40 33% 98%;
+
+    --popover: 120 15% 10%;
+    --popover-foreground: 40 33% 98%;
+
+    --border: 120 15% 20%;
+    --input: 120 15% 20%;
+    --ring: 130 25% 45%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased overflow-x-hidden;
+  }
+}
+
+/* Utilities not covered by tailwind config yet */
+@layer utilities {
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 10px;
+  }
+}
+
+@keyframes breatheAnimation {
+  0% { transform: scale(1); opacity: 0.5; }
+  25% { transform: scale(1.6); opacity: 1; } /* Inhale (4s) */
+  50% { transform: scale(1.6); opacity: 1; } /* Hold (4s) */
+  75% { transform: scale(1); opacity: 0.5; } /* Exhale (4s) */
+  100% { transform: scale(1); opacity: 0.5; } /* Hold (4s) */
+}
+
+.animate-breathe {
+  animation: breatheAnimation 16s linear infinite;
+}
