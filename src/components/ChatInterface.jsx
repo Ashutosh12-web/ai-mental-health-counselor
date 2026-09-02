@@ -1,9 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, User, Wind } from 'lucide-react';
-import { generateAIResponse } from '../services/aiService';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Send, User, Wind, AlertTriangle, X, Settings } from 'lucide-react';
+import { generateAIResponse, fetchCrisisResources } from '../services/aiService';
 import BreathingExercise from './BreathingExercise';
 
-const ChatInterface = ({ userName, initialMood, onReset }) => {
+const ChatInterface = ({ userName, settings }) => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const initialMood = location.state?.initialMood || 'neutral';
+  const initialMessage = location.state?.initialMessage;
+
   const [messages, setMessages] = useState(() => {
     const saved = localStorage.getItem(`counselor_messages_${userName}`);
     return saved ? JSON.parse(saved) : [];
@@ -11,6 +17,7 @@ const ChatInterface = ({ userName, initialMood, onReset }) => {
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [showBreathing, setShowBreathing] = useState(false);
+  const [crisisResources, setCrisisResources] = useState([]);
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -18,12 +25,35 @@ const ChatInterface = ({ userName, initialMood, onReset }) => {
   };
 
   const hasInitializedRef = useRef(false);
+  const initialMessageSentRef = useRef(false);
+
+  useEffect(() => {
+    const getResources = async () => {
+      const resources = await fetchCrisisResources();
+      setCrisisResources(resources);
+    };
+    getResources();
+  }, []);
 
   useEffect(() => {
     if (hasInitializedRef.current) return;
     hasInitializedRef.current = true;
 
     const startChat = async () => {
+      // Auto-send initial message from Landing Page opener
+      if (initialMessage && !initialMessageSentRef.current) {
+        initialMessageSentRef.current = true;
+        
+        const userMsg = { id: Date.now(), sender: 'user', text: initialMessage };
+        setMessages(prev => {
+          const newMessages = [...prev, userMsg];
+          // Fire the AI response with the updated messages
+          handleAutoSend(initialMessage, newMessages);
+          return newMessages;
+        });
+        return;
+      }
+
       setIsTyping(true);
       await new Promise(resolve => setTimeout(resolve, 1500));
       
@@ -46,12 +76,34 @@ const ChatInterface = ({ userName, initialMood, onReset }) => {
 
     startChat();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userName, initialMood]);
+  }, [userName, initialMood, initialMessage]);
 
   useEffect(() => {
     localStorage.setItem(`counselor_messages_${userName}`, JSON.stringify(messages));
     scrollToBottom();
   }, [messages, isTyping, userName]);
+
+  const handleAutoSend = async (userText, history) => {
+    setIsTyping(true);
+    try {
+      const aiResponse = await generateAIResponse(userText, initialMood, history.slice(0, -1), settings.aiName, settings.aiTone);
+      const newAiMsg = { 
+        id: Date.now() + 1, 
+        sender: 'ai', 
+        text: aiResponse.text,
+        options: aiResponse.options,
+        crisisDetected: aiResponse.crisisDetected,
+        crisisDismissed: false
+      };
+      setMessages(prev => [...prev, newAiMsg]);
+    } catch (error) {
+      console.error('Error generating AI response:', error);
+      const errorMsg = { id: Date.now() + 1, sender: 'ai', text: "I'm having a little trouble connecting right now, but please know I'm still here for you." };
+      setMessages(prev => [...prev, errorMsg]);
+    } finally {
+      setIsTyping(false);
+    }
+  };
 
   const handleSendMessage = async (textToSend) => {
     if (!textToSend.trim()) return;
@@ -63,12 +115,14 @@ const ChatInterface = ({ userName, initialMood, onReset }) => {
     setIsTyping(true);
 
     try {
-      const aiResponse = await generateAIResponse(userText, initialMood, messages);
+      const aiResponse = await generateAIResponse(userText, initialMood, messages, settings.aiName, settings.aiTone);
       const newAiMsg = { 
         id: Date.now() + 1, 
         sender: 'ai', 
         text: aiResponse.text,
-        options: aiResponse.options 
+        options: aiResponse.options,
+        crisisDetected: aiResponse.crisisDetected,
+        crisisDismissed: false
       };
       setMessages(prev => [...prev, newAiMsg]);
       
@@ -89,6 +143,10 @@ const ChatInterface = ({ userName, initialMood, onReset }) => {
     handleSendMessage(inputMessage);
   };
 
+  const dismissCrisisAlert = (msgId) => {
+    setMessages(prev => prev.map(msg => msg.id === msgId ? { ...msg, crisisDismissed: true } : msg));
+  };
+
   return (
     <div className="flex-1 flex flex-col h-full max-h-[calc(100vh-4rem)] bg-card/60 backdrop-blur-xl border border-border rounded-3xl shadow-2xl relative overflow-hidden animate-in fade-in zoom-in-95 duration-500">
       {showBreathing && <BreathingExercise onClose={() => setShowBreathing(false)} />}
@@ -98,7 +156,7 @@ const ChatInterface = ({ userName, initialMood, onReset }) => {
           <User size={24} />
         </div>
         <div className="flex-1">
-          <h3 className="font-semibold text-foreground m-0">Dr. Aura (AI)</h3>
+          <h3 className="font-semibold text-foreground m-0">{settings.aiName || 'Dr. Aura'} (AI)</h3>
           <p className="text-sm text-muted-foreground m-0">Mental Health Assistant</p>
         </div>
         <button 
@@ -110,16 +168,40 @@ const ChatInterface = ({ userName, initialMood, onReset }) => {
           <span className="font-medium text-sm">Breathe</span>
         </button>
         <button 
-          onClick={onReset}
-          className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full transition-colors border border-transparent hover:border-destructive/20"
+          onClick={() => navigate('/settings')}
+          className="p-2 rounded-full hover:bg-accent/10 text-muted-foreground hover:text-foreground transition-colors mr-1"
+          title="Settings"
         >
-          Sign Out
+          <Settings size={20} />
         </button>
       </div>
 
       <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6 custom-scrollbar">
         {messages.map((msg, index) => (
           <div key={msg.id} className="flex flex-col gap-2 w-full">
+            {msg.crisisDetected && !msg.crisisDismissed && (
+              <div role="alert" className="w-full bg-destructive/10 border border-destructive/20 rounded-xl p-4 flex flex-col gap-3 animate-in slide-in-from-top-2 mb-2 relative">
+                <button onClick={() => dismissCrisisAlert(msg.id)} className="absolute top-2 right-2 p-1 text-destructive hover:bg-destructive/10 rounded-full transition-colors" title="Dismiss">
+                  <X size={16} />
+                </button>
+                <div className="flex items-center gap-2 text-destructive font-semibold">
+                  <AlertTriangle size={18} />
+                  <span>Support is available</span>
+                </div>
+                <p className="text-sm text-foreground/80 m-0">You are not alone. Please reach out to one of these free, confidential resources:</p>
+                <div className="flex flex-col gap-2">
+                  {crisisResources.map((resource, i) => (
+                    <div key={i} className="bg-background/50 rounded-lg p-3 border border-border">
+                      <div className="font-medium">{resource.name}</div>
+                      <div className="text-sm text-muted-foreground mb-1">{resource.description}</div>
+                      <a href={`tel:${resource.phone}`} className="inline-flex items-center text-primary font-medium hover:underline">
+                        Call {resource.phone}
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             <div className={`max-w-[80%] p-4 rounded-2xl leading-relaxed animate-in fade-in slide-in-from-bottom-2 ${msg.sender === 'ai' ? 'self-start bg-secondary text-secondary-foreground rounded-bl-sm' : 'self-end bg-primary text-primary-foreground rounded-br-sm'}`}>
               {msg.text}
             </div>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 
-const BreathingExercise = ({ onClose }) => {
+const BreathingExercise = ({ onClose, inline = false }) => {
   const [phase, setPhase] = useState('Inhale'); // Inhale, Hold, Exhale, Hold
   const [countdown, setCountdown] = useState(4);
   const [isActive, setIsActive] = useState(true);
@@ -43,14 +43,16 @@ const BreathingExercise = ({ onClose }) => {
   }, [isActive]);
 
   return (
-    <div className="absolute inset-0 bg-background/80 backdrop-blur-md z-50 flex items-center justify-center animate-in fade-in duration-500">
-      <div className="w-[90%] max-w-md p-12 flex flex-col items-center relative bg-card/50 border border-white/10 rounded-3xl shadow-2xl">
-        <button 
-          onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-foreground hover:bg-white/10 rounded-full transition-colors"
-        >
-          <X size={24} />
-        </button>
+    <div className={inline ? "flex flex-col items-center justify-center w-full relative" : "absolute inset-0 bg-background/80 backdrop-blur-md z-50 flex items-center justify-center animate-in fade-in duration-500"}>
+      <div className={`w-[90%] max-w-md p-12 flex flex-col items-center relative ${inline ? '' : 'bg-card/50 border border-white/10 rounded-3xl shadow-2xl'}`}>
+        {!inline && (
+          <button 
+            onClick={onClose}
+            className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-foreground hover:bg-white/10 rounded-full transition-colors"
+          >
+            <X size={24} />
+          </button>
+        )}
 
         <h2 className="text-2xl font-bold mb-2">Box Breathing</h2>
         <p className="text-muted-foreground mb-12">4-4-4-4 Technique</p>

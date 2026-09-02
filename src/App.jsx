@@ -1,62 +1,46 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import WelcomeScreen from './components/WelcomeScreen';
-import MoodSelector from './components/MoodSelector';
-import ChatInterface from './components/ChatInterface';
+import Layout from './components/Layout';
 import LandingPage from './components/LandingPage';
+import ChatInterface from './components/ChatInterface';
+import SettingsPage from './components/SettingsPage';
+import JournalPage from './components/JournalPage';
+import ToolkitPage from './components/ToolkitPage';
+import HelpPage from './components/HelpPage';
+import NotFoundPage from './components/NotFoundPage';
+import { useSettings } from './hooks/useSettings';
 
-function ChatApp() {
-  const [appState, setAppState] = useState(() => {
-    return localStorage.getItem('counselor_userName') ? 'mood' : 'welcome';
-  });
-  const [userName, setUserName] = useState(() => {
-    return localStorage.getItem('counselor_userName') || '';
-  });
-  const [userMood, setUserMood] = useState('');
+function AppContent() {
+  const { settings, updateSettings } = useSettings();
+  const [userName, setUserName] = useState(() => localStorage.getItem('counselor_userName') || '');
 
-  const handleNameSubmit = (name) => {
-    setUserName(name);
-    localStorage.setItem('counselor_userName', name);
-    setAppState('mood');
-  };
+  const ChatWrapper = () => (
+    <ChatInterface userName={userName} settings={settings} />
+  );
 
-  const handleMoodSelect = (mood) => {
-    setUserMood(mood);
-    setAppState('chat');
-  };
-
-  const handleReset = () => {
-    localStorage.removeItem('counselor_userName');
-    // We do NOT remove counselor_messages so that if the same user returns, their history is preserved
-    setUserName('');
-    setUserMood('');
-    setAppState('welcome');
-  };
+  const SettingsWrapper = () => (
+    <SettingsPage userName={userName} settings={settings} updateSettings={updateSettings} />
+  );
 
   return (
-    <div className="w-full max-w-3xl mx-auto h-screen p-4 md:p-8 flex flex-col relative">
-      {appState === 'welcome' && (
-        <WelcomeScreen onComplete={handleNameSubmit} />
-      )}
-      
-      {appState === 'mood' && (
-        <MoodSelector userName={userName} onSelect={handleMoodSelect} onReset={handleReset} />
-      )}
-      
-      {appState === 'chat' && (
-        <ChatInterface userName={userName} initialMood={userMood} onReset={handleReset} />
-      )}
-    </div>
+    <Routes>
+      <Route element={<Layout />}>
+        <Route path="/" element={<LandingPage userName={userName} setUserName={setUserName} />} />
+        <Route path="/chat" element={<ChatWrapper />} />
+        <Route path="/journal" element={<JournalPage userName={userName} />} />
+        <Route path="/toolkit" element={<ToolkitPage />} />
+        <Route path="/help" element={<HelpPage />} />
+        <Route path="/settings" element={<SettingsWrapper />} />
+        <Route path="*" element={<NotFoundPage />} />
+      </Route>
+    </Routes>
   );
 }
 
 function App() {
   return (
     <Router>
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/app" element={<ChatApp />} />
-      </Routes>
+      <AppContent />
     </Router>
   );
 }
