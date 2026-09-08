@@ -1,14 +1,19 @@
 import React from 'react';
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { MessageCircle, Book, Wrench, HelpCircle, Settings } from 'lucide-react';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { MessageCircle, Book, Wrench, HelpCircle, Settings, LogOut } from 'lucide-react';
 
 const Layout = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   
   // Hide nav on the landing page
   if (location.pathname === '/') {
     return <Outlet />;
   }
+
+  const handleLogout = () => {
+    navigate('/');
+  };
 
   return (
     <div className="w-full h-screen flex flex-col md:flex-row-reverse bg-background overflow-hidden relative">
@@ -24,10 +29,7 @@ const Layout = () => {
           <h1 className="text-2xl font-bold text-foreground">Haven</h1>
         </div>
 
-        <NavLink to="/chat" className={({isActive}) => `flex flex-col md:flex-row items-center gap-1 md:gap-3 p-2 md:px-4 md:py-3 rounded-xl md:w-full transition-colors ${isActive ? 'text-primary bg-primary/10' : 'text-muted-foreground hover:bg-accent/10 hover:text-foreground'}`}>
-          <MessageCircle size={24} />
-          <span className="text-[10px] md:text-sm font-medium">Chat</span>
-        </NavLink>
+
         <NavLink to="/journal" className={({isActive}) => `flex flex-col md:flex-row items-center gap-1 md:gap-3 p-2 md:px-4 md:py-3 rounded-xl md:w-full transition-colors ${isActive ? 'text-primary bg-primary/10' : 'text-muted-foreground hover:bg-accent/10 hover:text-foreground'}`}>
           <Book size={24} />
           <span className="text-[10px] md:text-sm font-medium">Journal</span>
@@ -47,6 +49,11 @@ const Layout = () => {
           <Settings size={24} />
           <span className="text-[10px] md:text-sm font-medium">Settings</span>
         </NavLink>
+
+        <button onClick={handleLogout} className="flex flex-col md:flex-row items-center gap-1 md:gap-3 p-2 md:px-4 md:py-3 rounded-xl md:w-full transition-colors text-muted-foreground hover:bg-destructive/10 hover:text-destructive">
+          <LogOut size={24} />
+          <span className="text-[10px] md:text-sm font-medium">Logout</span>
+        </button>
       </nav>
       
     </div>

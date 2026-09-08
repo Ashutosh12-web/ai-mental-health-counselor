@@ -40,10 +40,14 @@ app.post('/api/chat', async (req, res) => {
       systemInstruction += `\n\n${crisisSystemPromptAddendum}`;
     }
     
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    
     // We could format history here if needed, but for now we'll just send the latest message
     // with a system instruction.
-    const response = await ai.models.generateContent({
-        model: 'gemini-3.7-flash',
+    const responseStream = await ai.models.generateContentStream({
+        model: 'gemini-3.6-flash',
         contents: [
             {
                 role: 'user',
@@ -56,15 +60,28 @@ app.post('/api/chat', async (req, res) => {
         ]
     });
     
-    // The frontend expects { text, options } plus now crisisDetected
-    res.json({
-        text: response.text,
-        options: [],
-        crisisDetected: isCrisisDetected
-    });
+    // Send initial metadata
+    res.write(`data: ${JSON.stringify({ type: 'meta', crisisDetected: isCrisisDetected })}\n\n`);
+    
+    // Stream chunks
+    for await (const chunk of responseStream) {
+      if (chunk.text) {
+        res.write(`data: ${JSON.stringify({ type: 'text', text: chunk.text })}\n\n`);
+      }
+    }
+    
+    // End the stream
+    res.write(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
+    res.end();
   } catch (error) {
     console.error('Error generating AI response:', error);
-    res.status(500).json({ error: 'Failed to generate AI response' });
+    // If headers are not sent, send a 500 error. Otherwise just end the stream.
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Failed to generate AI response' });
+    } else {
+      res.write(`data: ${JSON.stringify({ type: 'error' })}\n\n`);
+      res.end();
+    }
   }
 });
 

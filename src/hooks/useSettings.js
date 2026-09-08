@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 const defaultSettings = {
   aiName: 'Haven',
   aiTone: 'empathetic',
-  reduceMotion: false
+  reduceMotion: true
 };
 
 export const useSettings = () => {
