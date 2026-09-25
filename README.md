@@ -1,16 +1,34 @@
-# React + Vite
+# Haven - AI Mental Health Counselor
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+An empathetic AI-powered mental health counselor application built with React, Vite, Express, and Google Gemini API (`@google/genai`).
 
-Currently, two official plugins are available:
+## 📚 Project Recreation & Prompts Guide
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+If you want to recreate this project from scratch step-by-step using an AI assistant (Antigravity, Gemini, ChatGPT, Claude), check out the complete guide:
 
-## React Compiler
+👉 **[PROMPTS_GUIDE.md](file:///e:/AI%20Bootcamp/Week-4/ai-mental-health-counselor/PROMPTS_GUIDE.md)**
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the Oxlint configuration
+## 🚀 Quick Start
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+### 1. Install Dependencies
+```bash
+npm install
+```
+
+### 2. Configure Environment Variables
+Create a `.env` file in the root directory:
+```env
+GEMINI_API_KEY=your_gemini_api_key_here
+PORT=3001
+```
+
+### 3. Run Development Server
+```bash
+npm run dev
+```
+
+- **Frontend:** http://localhost:5173
+- **Backend:** http://localhost:3001
+
